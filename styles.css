@@ -129,10 +129,16 @@ body {
 }
 
 .logo-icon {
-    width: 35px;
-    height: 35px;
+    width: 45px;
+    height: 45px;
     margin-right: 10px;
     color: var(--primary-color);
+}
+
+.logo-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .logo-text {

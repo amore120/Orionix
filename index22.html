@@ -14,7 +14,7 @@
       top: 0; left: 0;
       width: 100%; height: 100%;
       object-fit: cover; z-index: -1;
-      filter: brightness(1);
+      filter: brightness(0.7);
     }
 
     /* 🚀 Logo superior izquierda */
@@ -89,6 +89,34 @@
       background: cyan; color: black; box-shadow:0 0 30px cyan,0 0 60px blue; transform: scale(1.1);
     }
 
+    /* ✨ Mensaje de bienvenida dinámico */
+    .welcome-msg {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      background: rgba(0,212,255,0.95);
+      color: black;
+      padding: 25px 35px;
+      border-radius: 20px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      box-shadow: 0 0 30px #00d4ff;
+      z-index: 10000;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.5s ease, transform 0.3s ease;
+    }
+    .welcome-msg button {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      background: transparent;
+      border: none;
+      font-size: 1.3rem;
+      cursor: pointer;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -99,7 +127,7 @@
   </video>
 
   <!-- 🚀 Logo -->
-  <a href="https://www.spaceappschallenge.org/2025/find-a-team/nature-bytes/?tab=details">
+  <a href="#">
     <img src="logo orionix.png" alt="Logo Orionix" class="logo">
   </a>
 
@@ -111,7 +139,7 @@
     <h1 id="title">ORIONIX</h1>
     <h1 id="subtitle">Más allá del límite, más allá del cosmos</h1>
     <p id="description">Explora la Luna con un zoom sin límites.<br>Una experiencia creada para la NASA Space Apps Challenge.</p>
-    <a href="escoge.html" class="btn" id="enter-btn">Entrar al visor</a>
+    <a href="escoge.html" class="btn" id="enter-btn" onclick="mostrarBienvenida()">Entrar al visor</a>
   </div>
 
   <!-- 🚪 Botón cerrar sesión -->
@@ -150,15 +178,33 @@
     }
 
     // Modal funciones
-    function abrirModal() {
-      document.getElementById("logoutModal").style.display = "block";
+    function abrirModal() { document.getElementById("logoutModal").style.display = "block"; }
+    function cerrarModal() { document.getElementById("logoutModal").style.display = "none"; }
+    function cerrarSesion() { window.location.href = "login.html"; }
+
+    // Mostrar mensaje de bienvenida
+    function mostrarBienvenida() {
+      const welcomeDiv = document.createElement('div');
+      welcomeDiv.className = 'welcome-msg';
+      welcomeDiv.innerHTML = `<button onclick="cerrarMensaje(this)">✖</button>¡Gracias por unirte a ORIONIX! 🌌 Explora y disfruta de la experiencia.`;
+      document.body.appendChild(welcomeDiv);
+
+      // Animación entrada
+      setTimeout(() => { 
+        welcomeDiv.style.opacity = '1';
+        welcomeDiv.style.transform = 'translate(-50%, -50%) scale(1)';
+      }, 50);
     }
-    function cerrarModal() {
-      document.getElementById("logoutModal").style.display = "none";
-    }
-    function cerrarSesion() {
-      window.location.href = "login.html"; // Redirige al inicio o login
+
+    function cerrarMensaje(btn) {
+      const div = btn.parentElement;
+      div.style.opacity = '0';
+      div.style.transform = 'translate(-50%, -50%) scale(0.8)';
+      setTimeout(() => div.remove(), 300);
     }
   </script>
 </body>
 </html>
+
+
+
