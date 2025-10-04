@@ -5,165 +5,160 @@
   <title>🌌 ORIONIX</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html { width: 100%; height: 100%; font-family: 'Orbitron', sans-serif; overflow: hidden; background: rgba(0,0,0,0); }
 
-    body, html {
-      width: 100%;
-      height: 100%;
-      font-family: 'Orbitron', sans-serif;
-      overflow: hidden;
-      background: rgba(0, 0, 0, 0);
-    }
-
-    /* Background video */
+    /* 🎥 Video de fondo */
     .bg-video {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: -1;
-      filter: brightness(0.6);
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover; z-index: -1;
+      filter: brightness(1);
     }
 
-    /* Logo in the top left corner */
+    /* 🚀 Logo superior izquierda */
     .logo {
-      position: fixed;
-      top: 15px;
-      left: 20px;
-      width: 100px;
-      height: auto;
-      z-index: 2;
+      position: fixed; top: 15px; left: 20px;
+      width: 100px; height: auto; z-index: 2;
       filter: drop-shadow(0 0 10px cyan);
-      transition: transform 0.3s ease;
-      cursor: pointer;
+      transition: transform 0.3s ease; cursor: pointer;
     }
+    .logo:hover { transform: scale(1.1); }
 
-    .logo:hover {
-      transform: scale(1.1);
-    }
-
-    /* Language button */
+    /* 🌍 Botón idioma (superior derecha) */
     .lang-btn {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: cyan;
-      color: black;
-      border: none;
-      padding: 10px 20px;
-      font-size: 1rem;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: 0.3s;
-      box-shadow: 0 0 15px cyan, 0 0 30px blue;
-      z-index: 2;
+      position: fixed; top: 20px; right: 20px;
+      background: cyan; color: black; border: none;
+      padding: 10px 20px; font-size: 1rem; border-radius: 20px;
+      cursor: pointer; transition: 0.3s;
+      box-shadow: 0 0 15px cyan, 0 0 30px blue; z-index: 2;
     }
+    .lang-btn:hover { background: #00ffaa; box-shadow: 0 0 25px #00ffaa, 0 0 50px cyan; }
 
-    .lang-btn:hover {
-      background: #00ffaa;
-      box-shadow: 0 0 25px #00ffaa, 0 0 50px cyan;
-    }
-
-    /* Content container */
+    /* 🛰️ Contenido central */
     .container {
-      position: relative;
-      z-index: 1;
-      text-align: center;
-      top: 35%;
-      transform: translateY(-35%);
+      position: relative; z-index: 1; text-align: center;
+      top: 35%; transform: translateY(-35%);
       color: cyan;
     }
-
-    h1 {
-      font-size: 3.5rem;
-      text-shadow: 0 0 20px cyan, 0 0 40px blue;
-      animation: glow 3s infinite alternate;
-    }
-
-    @keyframes glow {
-      from { text-shadow: 0 0 15px cyan, 0 0 30px blue; }
-      to { text-shadow: 0 0 30px cyan, 0 0 60px purple; }
-    }
-
-    p {
-      margin: 20px 0;
-      font-size: 1.3rem;
-      color: #aaf;
-      text-shadow: 0 0 10px #00f;
-    }
-
+    h1 { font-size: 3.5rem; text-shadow: 0 0 20px cyan, 0 0 40px blue; animation: glow 3s infinite alternate; }
+    @keyframes glow { from { text-shadow: 0 0 15px cyan,0 0 30px blue; } to { text-shadow:0 0 30px cyan,0 0 60px purple; } }
+    p { margin: 20px 0; font-size: 1.3rem; color: #aaf; text-shadow:0 0 10px #00f; }
     .btn {
-      display: inline-block;
-      margin-top: 30px;
-      background: cyan;
-      color: black;
-      font-size: 1.4rem;
-      padding: 15px 40px;
-      border: none;
-      border-radius: 30px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: 0.3s;
-      box-shadow: 0 0 25px cyan, 0 0 50px blue;
+      display: inline-block; margin-top: 30px;
+      background: cyan; color: black; font-size: 1.4rem;
+      padding: 15px 40px; border: none; border-radius: 30px;
+      cursor: pointer; text-decoration: none;
+      transition: 0.3s; box-shadow:0 0 25px cyan,0 0 50px blue;
+    }
+    .btn:hover { background:#00ffaa; box-shadow:0 0 40px #00ffaa,0 0 80px cyan; transform: scale(1.1); }
+
+    /* 🚪 Botón cerrar sesión (inferior izquierda) */
+    .logout-btn {
+      position: fixed; bottom: 20px; left: 20px;
+      background: transparent; color: cyan; border: 2px solid cyan;
+      padding: 10px 25px; border-radius: 25px; font-size: 1rem;
+      cursor: pointer; z-index: 2; font-family: 'Orbitron', sans-serif;
+      box-shadow: 0 0 15px cyan; transition: all 0.3s ease;
+    }
+    .logout-btn:hover { background: cyan; color: black; box-shadow:0 0 30px cyan,0 0 60px blue; transform: scale(1.1); }
+
+    /* ✅ Modal */
+    #logoutModal { display: none; }
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.75); z-index: 10;
+    }
+    .modal-content {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+      background: rgba(0,0,0,0.9); border: 2px solid cyan; padding: 30px 40px;
+      border-radius: 15px; text-align: center; color: cyan; z-index: 11;
+      animation: modalIn 0.3s forwards; box-shadow:0 0 30px cyan,0 0 60px blue;
+    }
+    @keyframes modalIn { to { transform: translate(-50%, -50%) scale(1); } }
+    .modal-content h2 { margin-bottom:15px; font-size:1.8rem; text-shadow:0 0 10px cyan; }
+    .modal-content p { font-size:1.2rem; margin-bottom:25px; }
+    .modal-buttons { display:flex; justify-content:center; gap:20px; }
+    .modal-buttons button {
+      padding:10px 25px; border-radius:25px; border:2px solid cyan;
+      background:transparent; color:cyan; font-weight:bold; font-size:1rem;
+      cursor:pointer; box-shadow:0 0 15px cyan; transition: all 0.3s ease;
+    }
+    .modal-buttons button:hover {
+      background: cyan; color: black; box-shadow:0 0 30px cyan,0 0 60px blue; transform: scale(1.1);
     }
 
-    .btn:hover {
-      background: #00ffaa;
-      box-shadow: 0 0 40px #00ffaa, 0 0 80px cyan;
-      transform: scale(1.1);
-    }
   </style>
 </head>
 <body>
-  <!-- 🎥 Background video -->
+  <!-- 🎥 Video de fondo -->
   <video autoplay muted loop class="bg-video">
     <source src="fondo2.mp4" type="video/mp4">
-    Your browser does not support background video.
+    Tu navegador no soporta video de fondo.
   </video>
 
-  <!-- Logo with link -->
+  <!-- 🚀 Logo -->
   <a href="https://www.spaceappschallenge.org/2025/find-a-team/nature-bytes/?tab=details">
     <img src="logo orionix.png" alt="Logo Orionix" class="logo">
   </a>
 
-  <!-- Language Switch -->
+  <!-- 🌍 Botón idioma -->
   <button class="lang-btn" onclick="toggleLanguage()">EN / ES</button>
 
-  <!-- Content -->
+  <!-- 🛰️ Contenido principal -->
   <div class="container">
     <h1 id="title">ORIONIX</h1>
     <h1 id="subtitle">Más allá del límite, más allá del cosmos</h1>
-    <p id="description">Explora la Luna con un zoom sin límites.<br>
-       Una experiencia creada para la NASA Space Apps Challenge.</p>
+    <p id="description">Explora la Luna con un zoom sin límites.<br>Una experiencia creada para la NASA Space Apps Challenge.</p>
     <a href="escoge.html" class="btn" id="enter-btn">Entrar al visor</a>
+  </div>
+
+  <!-- 🚪 Botón cerrar sesión -->
+  <button class="logout-btn" onclick="abrirModal()">⏻ Cerrar sesión</button>
+
+  <!-- ✅ Modal -->
+  <div id="logoutModal">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <h2>¿Cerrar sesión?</h2>
+      <p>Estás a punto de salir de ORIONIX. ¿Deseas continuar?</p>
+      <div class="modal-buttons">
+        <button class="modal-yes" onclick="cerrarSesion()">Sí</button>
+        <button class="modal-no" onclick="cerrarModal()">No</button>
+      </div>
+    </div>
   </div>
 
   <script>
     let lang = "es";
+
     function toggleLanguage() {
       if (lang === "es") {
-        // Switch to English
         document.getElementById("subtitle").textContent = "Beyond the limit, beyond the cosmos";
-        document.getElementById("description").innerHTML = 
-          "Explore the universe with unlimited zoom.<br>A project created for the NASA Space Apps Challenge.";
+        document.getElementById("description").innerHTML = "Explore the Moon with unlimited zoom.<br>A project created for the NASA Space Apps Challenge.";
         document.getElementById("enter-btn").textContent = "Enter Viewer";
+        document.querySelector(".logout-btn").textContent = "⏻ Log out";
         lang = "en";
       } else {
-        // Switch back to Spanish
         document.getElementById("subtitle").textContent = "Más allá del límite, más allá del cosmos";
-        document.getElementById("description").innerHTML = 
-          "Explora el universo con un zoom sin límites.<br>Una experiencia creada para la NASA Space Apps Challenge.";
+        document.getElementById("description").innerHTML = "Explora la Luna con un zoom sin límites.<br>Una experiencia creada para la NASA Space Apps Challenge.";
         document.getElementById("enter-btn").textContent = "Entrar al visor";
+        document.querySelector(".logout-btn").textContent = "⏻ Cerrar sesión";
         lang = "es";
       }
+    }
+
+    // Modal funciones
+    function abrirModal() {
+      document.getElementById("logoutModal").style.display = "block";
+    }
+    function cerrarModal() {
+      document.getElementById("logoutModal").style.display = "none";
+    }
+    function cerrarSesion() {
+      window.location.href = "login.html"; // Redirige al inicio o login
     }
   </script>
 </body>
 </html>
-
