@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -124,7 +125,7 @@
       transform: translateX(5px);
     }
 
-    /* 🎛️ Toolbar flotante */
+    /* 🎛 Toolbar flotante */
     .toolbar {
       position: absolute;
       top: 120px;
@@ -176,20 +177,13 @@
   </style>
 </head>
 <body>
-  <header>🌙 ORIONIX - Luna Explorer</header>
+  <header>MAPA LUNAR</header>
   <div id="openseadragon"></div>
 
   <!-- 🔍 Buscador lateral -->
-  <div class="sidebar">
-    <h2>Buscador Lunar</h2>
-    <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Ej: Mar de la Tranquilidad">
-      <button onclick="searchFeature()">🔍</button>
-    </div>
-    <div class="results" id="results"></div>
-  </div>
+ 
 
-  <!-- 🎛️ Toolbar -->
+  <!-- 🎛 Toolbar -->
   <div class="toolbar">
     <button id="zoom-in" class="btn">＋</button>
     <button id="zoom-out" class="btn">－</button>
@@ -213,7 +207,8 @@
     });
 
     // Imagen de prueba (luego se reemplaza con Deep Zoom lunar real NASA/USGS)
-    viewer.open("https://openseadragon.github.io/example-images/duomo/duomo.dzi");
+    viewer.open("luna_dzi1.dzi");
+
 
     // 📍 Catálogo básico de lugares lunares
     const lunarFeatures = {
@@ -248,7 +243,7 @@
       }
     }
 
-    // 🎛️ Controles personalizados
+    // 🎛 Controles personalizados
     document.getElementById("zoom-in").onclick = () => viewer.viewport.zoomBy(1.3) && viewer.viewport.applyConstraints();
     document.getElementById("zoom-out").onclick = () => viewer.viewport.zoomBy(0.7) && viewer.viewport.applyConstraints();
     document.getElementById("home").onclick = () => viewer.viewport.goHome();

@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>ORIONIX - Luna Explorer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      background: radial-gradient(ellipse at center, #000010 0%, #000000 100%);
+      color: white;
+      font-family: 'Orbitron', sans-serif;
+      overflow: hidden;
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+      padding: 20px;
+      background: linear-gradient(90deg, #000010, #0ff, #7d00ff, #000010);
+      background-size: 400% 400%;
+      animation: gradientMove 12s ease infinite;
+      color: cyan;
+      font-size: 1.8rem;
+      text-shadow: 0 0 25px cyan, 0 0 50px #7d00ff;
+      letter-spacing: 2px;
+      z-index: 200;
+    }
+
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    #openseadragon {
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .sidebar {
+      position: absolute;
+      top: 100px;
+      left: 30px;
+      background: rgba(0, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      border: 2px solid rgba(0, 255, 255, 0.6);
+      border-radius: 16px;
+      padding: 20px;
+      width: 280px;
+      max-height: calc(100vh - 150px);
+      box-shadow: 0 0 40px rgba(0, 255, 255, 0.5), inset 0 0 20px rgba(0, 255, 255, 0.3);
+      animation: fadeInLeft 1.2s ease;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .sidebar.hidden {
+      transform: translateX(-350px);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @keyframes fadeInLeft {
+      from { opacity: 0; transform: translateX(-60px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .sidebar h2 {
+      font-size: 1.3rem;
+      margin-bottom: 12px;
+      text-align: center;
+      color: #0ff;
+      text-shadow: 0 0 15px #0ff, 0 0 30px #7d00ff;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .search-box input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      font-size: 0.95rem;
+      outline: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: cyan;
+      box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.4);
+    }
+
+    .search-box button {
+      background: linear-gradient(135deg, cyan, #7d00ff);
+      border: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+      font-weight: bold;
+      color: black;
+      box-shadow: 0 0 15px cyan, 0 0 25px #7d00ff;
+    }
+
+    .search-box button:hover {
+      transform: scale(1.1);
+      background: linear-gradient(135deg, #00ffaa, cyan);
+      box-shadow: 0 0 25px #00ffaa, 0 0 40px cyan;
+    }
+
+    .results {
+      flex: 1;
+      overflow-y: auto;
+      font-size: 0.85rem;
+      scrollbar-width: thin;
+      scrollbar-color: cyan transparent;
+      margin-bottom: 10px;
+      max-height: 350px;
+      transition: max-height 0.3s ease;
+    }
+
+    .sidebar.minimized .results {
+      max-height: 180px;
+    }
+
+    .results::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .results::-webkit-scrollbar-track {
+      background: rgba(0, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+
+    .results::-webkit-scrollbar-thumb {
+      background: cyan;
+      border-radius: 10px;
+    }
+
+    .result-item {
+      padding: 8px;
+      border-bottom: 1px solid rgba(0, 255, 255, 0.4);
+      cursor: pointer;
+      transition: 0.3s;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .result-item:hover {
+      background: rgba(0, 255, 255, 0.15);
+      transform: translateX(5px);
+    }
+
+    .result-type {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .toolbar {
+      position: absolute;
+      top: 120px;
+      right: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      animation: fadeInRight 1.2s ease;
+      z-index: 100;
+    }
+
+    @keyframes fadeInRight {
+      from { opacity: 0; transform: translateX(60px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .btn {
+      background: rgba(0, 255, 255, 0.1);
+      border: 2px solid cyan;
+      border-radius: 50%;
+      color: cyan;
+      width: 60px;
+      height: 60px;
+      font-size: 26px;
+      cursor: pointer;
+      transition: 0.4s;
+      position: relative;
+    }
+
+    .btn::after {
+      content: "";
+      position: absolute;
+      inset: -10px;
+      border-radius: 50%;
+      border: 2px solid rgba(0, 255, 255, 0.3);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 1; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+
+    .btn:hover {
+      background: cyan;
+      color: black;
+      transform: scale(1.15);
+      box-shadow: 0 0 25px cyan, 0 0 40px #7d00ff;
+    }
+
+    .info-box {
+      position: absolute;
+      bottom: 30px;
+      left: 90px;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid cyan;
+      border-radius: 10px;
+      padding: 15px;
+      max-width: 300px;
+      font-size: 0.85rem;
+      color: #0ff;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .detail-panel {
+      position: absolute;
+      bottom: 30px;
+      right: 30px;
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(15px);
+      border: 2px solid rgba(0, 255, 255, 0.6);
+      border-radius: 16px;
+      padding: 20px;
+      max-width: 400px;
+      font-size: 0.9rem;
+      color: #fff;
+      z-index: 150;
+      box-shadow: 0 0 40px rgba(0, 255, 255, 0.5), inset 0 0 20px rgba(0, 255, 255, 0.2);
+      transform: translateY(150%);
+      opacity: 0;
+      transition: all 0.4s ease;
+      pointer-events: none;
+    }
+
+    .detail-panel.visible {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .detail-panel h3 {
+      color: cyan;
+      margin-top: 0;
+      margin-bottom: 12px;
+      font-size: 1.3rem;
+      text-shadow: 0 0 15px cyan;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .detail-panel .close-btn {
+      background: rgba(255, 0, 100, 0.2);
+      border: 2px solid #ff0066;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: 0.3s;
+      color: #ff0066;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .detail-panel .close-btn:hover {
+      background: #ff0066;
+      color: black;
+      transform: scale(1.1);
+    }
+
+    .detail-section {
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+    }
+
+    .detail-section:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .detail-label {
+      color: rgba(0, 255, 255, 0.8);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .detail-text {
+      color: #fff;
+      line-height: 1.5;
+    }
+
+    .coords-badge {
+      display: inline-block;
+      background: rgba(0, 255, 255, 0.1);
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      padding: 4px 10px;
+      border-radius: 8px;
+      margin-right: 8px;
+      font-size: 0.8rem;
+      color: cyan;
+    }
+
+    .info-toggle {
+      position: absolute;
+      bottom: 30px;
+      left: 30px;
+      background: rgba(0, 255, 255, 0.1);
+      border: 2px solid cyan;
+      border-radius: 50%;
+      width: 45px;
+      height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: 0.3s;
+      z-index: 101;
+      color: cyan;
+    }
+
+    .info-toggle:hover {
+      background: rgba(0, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+
+    .info-toggle:hover + .info-box {
+      opacity: 1;
+    }
+
+    .sidebar-toggle {
+      position: absolute;
+      top: 100px;
+      left: 30px;
+      background: rgba(0, 255, 255, 0.1);
+      border: 2px solid cyan;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 102;
+      color: cyan;
+    }
+
+    .sidebar-toggle:hover {
+      background: rgba(0, 255, 255, 0.2);
+      transform: scale(1.1);
+    }
+
+    .sidebar:not(.hidden) + .sidebar-toggle {
+      left: -15px;
+      top: 110px;
+    }
+
+    .minimize-btn {
+      background: rgba(0, 255, 255, 0.1);
+      border: 2px solid cyan;
+      border-radius: 8px;
+      color: cyan;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: 0.3s;
+      font-size: 12px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+
+    .minimize-btn:hover {
+      background: rgba(0, 255, 255, 0.2);
+    }
+
+    .minimize-btn svg {
+      flex-shrink: 0;
+    }
+
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.5rem;
+      color: cyan;
+      text-shadow: 0 0 20px cyan;
+      z-index: 1000;
+    }
+
+    .grid-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 50;
+      display: none;
+    }
+
+    .grid-label {
+      position: absolute;
+      color: rgba(255, 255, 255, 0.95);
+      font-size: 11px;
+      text-shadow: 0 0 10px black, 0 0 5px black, 2px 2px 4px black;
+      padding: 4px 8px;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 5px;
+      font-weight: 600;
+      pointer-events: auto;
+      cursor: pointer;
+      transition: 0.2s;
+      border: 1px solid rgba(0, 255, 255, 0.5);
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .grid-label:hover {
+      background: rgba(0, 255, 255, 0.9);
+      color: black;
+      transform: scale(1.15);
+      z-index: 100;
+      border-color: cyan;
+    }
+
+    .toggle-grid {
+      background: rgba(0, 255, 255, 0.1);
+      border: 2px solid cyan;
+      border-radius: 8px;
+      color: cyan;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: 0.4s;
+      font-size: 13px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .toggle-grid:hover {
+      background: cyan;
+      color: black;
+      box-shadow: 0 0 20px cyan;
+    }
+
+    .count-badge {
+      background: rgba(0, 255, 255, 0.2);
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>ORIONIX - Luna Explorer (NASA LRO WAC)</header>
+  <div id="openseadragon"></div>
+  <div class="loading" id="loading">Cargando mosaico lunar...</div>
+
+  <div class="sidebar">
+    <h2>Buscador Lunar</h2>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Buscar características...">
+      <button onclick="searchFeature()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+        </svg>
+      </button>
+    </div>
+    <div class="count-badge" id="countBadge">0 características</div>
+    <div class="results" id="results"></div>
+    <button class="minimize-btn" onclick="minimizeSidebar()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" id="minimizeIcon">
+        <path d="M1.5 14.5A1.5 1.5 0 0 1 0 13V6a1.5 1.5 0 0 1 1.5-1.5h13A1.5 1.5 0 0 1 16 6v7a1.5 1.5 0 0 1-1.5 1.5h-13zm1-5.034v-.42c0-.225.115-.384.294-.487.179-.103.447-.188.829-.255l.117-.02c.38-.067.65-.115.81-.145a1.993 1.993 0 0 0 .582-.253c.162-.106.289-.241.381-.404.092-.163.138-.36.138-.592V7.31h.984v1.05c0 .265.058.468.173.611.116.142.298.282.546.42.248.138.554.258.917.36.363.103.748.197 1.155.284l.188.04c.234.047.393.09.477.128.084.039.125.09.125.155v.42H2.5z"/>
+      </svg>
+      <span id="minimizeText">Mostrar menos</span>
+    </button>
+    <button class="toggle-grid" onclick="toggleGrid()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm8 0A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3z"/>
+      </svg>
+      <span>Mostrar Nomenclatura</span>
+    </button>
+  </div>
+
+  <div class="toolbar">
+    <button id="zoom-in" class="btn" title="Acercar">＋</button>
+    <button id="zoom-out" class="btn" title="Alejar">－</button>
+    <button id="home" class="btn" title="Vista inicial">⟳</button>
+    <button id="fullscreen" class="btn" title="Pantalla completa">⛶</button>
+  </div>
+
+  <button class="info-toggle" title="Información de la fuente">
+    <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+      <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+    </svg>
+  </button>
+  
+  <div class="info-box" id="infoBox">
+    <strong>Fuente:</strong> NASA LRO WAC Global Mosaic<br>
+    <strong>Resolución:</strong> 303 ppd (~100m/pixel)<br>
+    <strong>Tamaño:</strong> 109164 × 54582 px<br>
+    <strong>Proyección:</strong> Equirectangular EPSG:104903
+  </div>
+
+  <div class="detail-panel" id="detailPanel">
+    <h3>
+      <span id="featureName">Característica Lunar</span>
+      <div class="close-btn" onclick="closeDetailPanel()">✕</div>
+    </h3>
+    <div class="detail-section">
+      <div class="detail-label">Coordenadas</div>
+      <div class="detail-text">
+        <span class="coords-badge" id="featureCoords">0°N, 0°E</span>
+        <span class="coords-badge" id="featureType">tipo</span>
+      </div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-label">Información</div>
+      <div class="detail-text" id="featureInfo">Información sobre la característica...</div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-label">💡 Dato Curioso</div>
+      <div class="detail-text" id="featureCuriosity">Dato interesante...</div>
+    </div>
+  </div>
+
+  <div id="grid-overlay" class="grid-overlay"></div>
+
+  <script>
+    const viewer = OpenSeadragon({
+      id: "openseadragon",
+      prefixUrl: "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/images/",
+      
+      showNavigator: true,
+      navigatorPosition: "BOTTOM_RIGHT",
+      animationTime: 1.5,
+      blendTime: 0.3,
+      constrainDuringPan: true,
+      visibilityRatio: 1,
+      minZoomLevel: 0.8,
+      maxZoomLevel: 50,
+      zoomPerScroll: 1.8,
+      backgroundColor: '#000000',
+      
+      immediateRender: false,
+      maxImageCacheCount: 300,
+      timeout: 120000,
+      
+      smoothTileEdgesMinZoom: 1.5,
+      placeholderFillStyle: '#000000',
+      
+      tileSources: {
+        Image: {
+          xmlns: "http://schemas.microsoft.com/deepzoom/2008",
+          Url: "luna_dzi1_files/",
+          Format: "jpg",
+          Overlap: "1",
+          TileSize: "254",
+          Size: {
+            Width: "109164",
+            Height: "54582"
+          }
+        }
+      },
+      
+      springStiffness: 8.0,
+      clickTimeThreshold: 300,
+      clickDistThreshold: 5
+    });
+
+    viewer.open("luna_dzi1.dzi");
+    viewer.addHandler('open', function() {
+      document.getElementById('loading').style.display = 'none';
+      console.log('Mosaico lunar cargado correctamente');
+    });
+
+    viewer.addHandler('open-failed', function() {
+      document.getElementById('loading').innerHTML = 
+        'Error al cargar. Verifica la ruta del archivo DZI.';
+    });
+
+    function convertCoords(lat, lon) {
+      const x = (lon + 180) / 360;
+      const y = (90 - lat) / 180;
+      return { x, y };
+    }
+    
+    const lunarFeaturesData = {
+      "Mare Imbrium": { 
+        lat: 32.8, lon: -15.6, zoom: 7, type: "mare",
+        info: "Mar de las Lluvias. Formado hace 3,850 millones de años por un impacto masivo. Es una de las cuencas de impacto más grandes del Sistema Solar con 1,145 km de diámetro.",
+        curiosity: "El impacto que lo creó fue tan violento que expulsó material hasta 1,000 km de distancia y pudo haber inclinado el eje lunar."
+      },
+      "Mare Serenitatis": { 
+        lat: 28.0, lon: 17.5, zoom: 7, type: "mare",
+        info: "Mar de la Serenidad. Nombre dado por Giovanni Riccioli en 1651, asociando los 'mares' lunares con estados de ánimo humanos.",
+        curiosity: "Apollo 17 aterrizó en su borde este. Tiene aproximadamente 3,900 millones de años y un diámetro de 707 km."
+      },
+      "Mare Tranquillitatis": { 
+        lat: 8.5, lon: 31.4, zoom: 7, type: "mare",
+        info: "Mar de la Tranquilidad. Sitio histórico del primer alunizaje humano (Apollo 11, 20 julio 1969).",
+        curiosity: "Neil Armstrong y Buzz Aldrin pasaron 21.5 horas aquí. El mare tiene mascons (concentraciones de masa) que afectan las órbitas de satélites lunares."
+      },
+      "Mare Crisium": { 
+        lat: 17.0, lon: 59.1, zoom: 7, type: "mare",
+        info: "Mar de las Crisis. Uno de los mares más antiguos, formado hace ~3,900 millones de años. Nombre del latín 'crisis' (decisión).",
+        curiosity: "Por perspectiva, parece circular desde la Tierra pero en realidad es ovalado (570×450 km). Luna 24 trajo muestras de aquí en 1976."
+      },
+      "Oceanus Procellarum": { 
+        lat: 18.4, lon: -57.4, zoom: 6, type: "mare",
+        info: "Océano de las Tormentas. La planicie de lava más grande de la Luna con ~4 millones de km². El único 'oceanus' lunar.",
+        curiosity: "No es una cuenca de impacto sino resultado de actividad volcánica antigua. Tiene la mayor concentración de elementos radiactivos de la Luna."
+      },
+      "Mare Frigoris": { 
+        lat: 56.0, lon: 1.4, zoom: 7, type: "mare",
+        info: "Mar del Frío. Nombre dado por su ubicación septentrional. Se extiende por 1,596 km de este a oeste.",
+        curiosity: "Es uno de los últimos mares en formarse, con solo 3,200 millones de años. Conecta Mare Imbrium con Mare Serenitatis."
+      },
+      "Mare Vaporum": { 
+        lat: 13.3, lon: 3.6, zoom: 10, type: "mare",
+        info: "Mar de los Vapores. Nombre histórico dado por astrónomos del siglo XVII que pensaban ver neblina o vapor aquí.",
+        curiosity: "Es uno de los mares más pequeños (245 km). Ubicado en el centro exacto del lado visible, fue clave para mapas lunares históricos."
+      },
+      "Mare Insularum": { 
+        lat: 7.5, lon: -30.9, zoom: 9, type: "mare",
+        info: "Mar de las Islas. Llamado así por las numerosas 'islas' de terreno elevado que emergen de su superficie.",
+        curiosity: "Contiene el cráter Copernicus en su borde norte. El impacto de Copernicus cubrió gran parte del mare con eyecta brillante."
+      },
+      "Mare Marginis": { 
+        lat: 13.3, lon: 86.1, zoom: 8, type: "mare",
+        info: "Mar del Borde. Ubicado en el limbo lunar, apenas visible desde la Tierra debido a la libración.",
+        curiosity: "Su visibilidad desde la Tierra varía dramáticamente debido a la libración lunar. Fue cartografiado completamente solo con misiones espaciales."
+      },
+      "Mare Moscoviense": { 
+        lat: 27.3, lon: 147.9, zoom: 9, type: "mare",
+        info: "Mar de Moscú. Nombrado por la Academia Soviética de Ciencias. Uno de los pocos mares grandes del lado oculto.",
+        curiosity: "Descubierto en 1959 por la sonda soviética Luna 3. Tiene solo 277 km de diámetro pero es muy profundo."
+      },
+      "Copernicus": { 
+        lat: 9.7, lon: -20.1, zoom: 11, type: "crater",
+        info: "Nombrado por Nicolaus Copernicus (1473-1543), astrónomo polaco que propuso el modelo heliocéntrico del Sistema Solar.",
+        curiosity: "Tiene solo 800 millones de años (joven para la Luna). Sus rayos brillantes se extienden por 800 km. Profundidad: 3.8 km, diámetro: 93 km."
+      },
+      "Plato": { 
+        lat: 51.6, lon: -9.3, zoom: 11, type: "crater",
+        info: "Nombrado por Platón (427-347 a.C.), filósofo griego fundador de la Academia de Atenas.",
+        curiosity: "Su piso oscuro de lava lo hace fácilmente identificable. Astrónomos aficionados reportaron 'luces misteriosas' aquí, que resultaron ser efectos de iluminación."
+      },
+      "Kepler": { 
+        lat: 8.1, lon: -38.0, zoom: 11, type: "crater",
+        info: "Nombrado por Johannes Kepler (1571-1630), astrónomo alemán famoso por sus leyes del movimiento planetario.",
+        curiosity: "Tiene un sistema de rayos brillantes espectacular visible con telescopios pequeños. Formado hace ~800 millones de años."
+      },
+      "Aristarchus": { 
+        lat: 23.7, lon: -47.4, zoom: 11, type: "crater",
+        info: "Nombrado por Aristarco de Samos (310-230 a.C.), primer astrónomo en proponer un modelo heliocéntrico.",
+        curiosity: "¡El cráter más brillante de la Luna! Visible incluso a simple vista. Se han reportado fenómenos luminosos transitorios aquí por siglos."
+      },
+      "Archimedes": { 
+        lat: 29.7, lon: -4.0, zoom: 11, type: "crater",
+        info: "Nombrado por Arquímedes de Siracusa (287-212 a.C.), matemático y físico griego, inventor del tornillo de Arquímedes.",
+        curiosity: "Su piso perfectamente plano está lleno de lava. Con 83 km de diámetro, es uno de los cráteres inundados más grandes del Mare Imbrium."
+      },
+      "Eratosthenes": { 
+        lat: 14.5, lon: -11.3, zoom: 11, type: "crater",
+        info: "Nombrado por Eratóstenes (276-194 a.C.), quien calculó la circunferencia de la Tierra con increíble precisión.",
+        curiosity: "Marca el límite entre el período Eratosteniano y Copernicano de la Luna. Tiene picos centrales que alcanzan 3.6 km de altura."
+      },
+      "Posidonius": { 
+        lat: 31.8, lon: 29.9, zoom: 11, type: "crater",
+        info: "Nombrado por Posidonio (135-51 a.C.), polímata griego que estudió mareas, terremotos y astronomía.",
+        curiosity: "Contiene un sistema complejo de rimas (grietas) en su piso. Su pared norte está deformada por flujos de lava antiguos."
+      },
+      "Endymion": { 
+        lat: 53.6, lon: 56.5, zoom: 11, type: "crater",
+        info: "Nombrado por Endimión, pastor de la mitología griega amado por Selene (diosa de la Luna) quien lo visitaba cada noche.",
+        curiosity: "Tiene uno de los pisos más oscuros de la Luna. Con 125 km de diámetro, es visible con binoculares."
+      },
+      "Atlas": { 
+        lat: 46.7, lon: 44.4, zoom: 11, type: "crater",
+        info: "Nombrado por Atlas, titán de la mitología griega condenado a sostener el cielo sobre sus hombros.",
+        curiosity: "Forma un par distintivo con el cráter Hercules. Su piso muestra una red compleja de grietas y colinas."
+      },
+      "Hercules": { 
+        lat: 46.7, lon: 39.1, zoom: 11, type: "crater",
+        info: "Nombrado por Heracles (Hércules en latín), héroe de la mitología griega conocido por sus doce trabajos.",
+        curiosity: "Junto con Atlas, forma uno de los pares de cráteres más reconocibles de la Luna. Tiene pequeños cráteres dentro llamados 'Hercules A' y 'Hercules B'."
+      },
+      "Cleomedes": { 
+        lat: 27.7, lon: 55.5, zoom: 11, type: "crater",
+        info: "Nombrado por Cleómedes, astrónomo griego del siglo I que escribió sobre movimientos celestes y refracción atmosférica.",
+        curiosity: "Con 126 km de diámetro, contiene varios cráteres internos. Su piso muestra evidencia de vulcanismo antiguo."
+      },
+      "Proclus": { 
+        lat: 16.1, lon: 46.8, zoom: 12, type: "crater",
+        info: "Nombrado por Proclo (412-485 d.C.), filósofo neoplatónico griego y matemático que escribió comentarios sobre Euclides.",
+        curiosity: "Tiene un patrón de rayos asimétrico único: ¡sus eyecta evitan cierta dirección! Es muy brillante y joven (~1,000 millones de años)."
+      },
+      "Apollo 17": { 
+        lat: 20.191, lon: 30.772, zoom: 15, type: "landing",
+        info: "Última misión tripulada a la Luna (7-19 diciembre 1972). Tripulación: Eugene Cernan, Harrison Schmitt (geólogo), Ronald Evans.",
+        curiosity: "Trajeron 110.5 kg de muestras lunares. Encontraron suelo naranja volcánico de 3,640 millones de años. Cernan fue el último humano en caminar sobre la Luna."
+      },
+      "Luna 2": { 
+        lat: 29.1, lon: 0.0, zoom: 14, type: "landing",
+        info: "Primera nave espacial en alcanzar otro cuerpo celeste (13 septiembre 1959). Misión soviética que impactó intencionalmente la Luna.",
+        curiosity: "Llevaba banderines con el escudo de la URSS. Confirmó que la Luna no tiene campo magnético significativo ni cinturones de radiación."
+      },
+      "Luna 9": { 
+        lat: 7.08, lon: -64.37, zoom: 14, type: "landing",
+        info: "Primer alunizaje suave exitoso (3 febrero 1966). Transmitió las primeras fotos desde la superficie lunar.",
+        curiosity: "Funcionó durante 3 días. Sus fotos revelaron que la superficie lunar era sólida, disipando temores de que las naves se hundirían en polvo."
+      },
+      "Chang'e 3": { 
+        lat: 44.12, lon: -19.51, zoom: 14, type: "landing",
+        info: "Primer alunizaje suave chino (14 diciembre 2013). Incluyó el rover Yutu (Conejo de Jade).",
+        curiosity: "Yutu descubrió un nuevo tipo de roca basáltica. La misión funcionó mucho más de su vida útil planeada de 3 meses."
+      },
+      "Chang'e 5": { 
+        lat: 43.06, lon: -51.92, zoom: 14, type: "landing",
+        info: "Misión de retorno de muestras chinas (diciembre 2020). Trajo 1.731 kg de material lunar, las primeras muestras nuevas en 44 años.",
+        curiosity: "Descubrió que el vulcanismo lunar duró hasta hace 2,000 millones de años, 1,000 millones de años más de lo que se pensaba."
+      },
+      "Montes Apenninus": { 
+        lat: 19.9, lon: 0.0, zoom: 9, type: "mountain",
+        info: "Nombrados por los Apeninos en Italia. Parte del anillo de la cuenca Imbrium. Apollo 15 aterrizó en su base (sitio Hadley).",
+        curiosity: "Contienen algunos de los picos más altos de la Luna, alcanzando 5 km de altura. Se extienden por 600 km."
+      },
+      "Montes Caucasus": { 
+        lat: 38.0, lon: 10.0, zoom: 9, type: "mountain",
+        info: "Nombrados por las montañas del Cáucaso en la Tierra. Forman parte del borde noreste de la cuenca Imbrium.",
+        curiosity: "Se elevan abruptamente desde el Mare Serenitatis. Algunos picos alcanzan 6 km de altura sobre el mare."
+      },
+      "Montes Alpes": { 
+        lat: 46.4, lon: 0.6, zoom: 9, type: "mountain",
+        info: "Nombrados por los Alpes terrestres. Atravesados por el impresionante Vallis Alpes (Valle de los Alpes).",
+        curiosity: "Contienen picos de hasta 3.6 km de altura. Son parte del borde norte de la cuenca Imbrium."
+      },
+      "Montes Carpatus": { 
+        lat: 14.5, lon: -24.4, zoom: 9, type: "mountain",
+        info: "Nombrados por los Cárpatos en Europa. Forman el borde sur de Mare Imbrium.",
+        curiosity: "Se extienden en un arco de 361 km. Sus picos meridionales definen el límite entre Imbrium y el terreno montañoso."
+      },
+      "Montes Jura": { 
+        lat: 47.1, lon: -34.0, zoom: 9, type: "mountain",
+        info: "Nombrados por las montañas del Jura franco-suizo. Forman el arco noroeste que rodea Sinus Iridum.",
+        curiosity: "Crean la forma de 'bahía' distintiva de Sinus Iridum. Bajo luz rasante parecen una costa dorada."
+      },
+      "Montes Haemus": { 
+        lat: 19.9, lon: 9.2, zoom: 10, type: "mountain",
+        info: "Nombrados por los montes Balcanes (antiguamente Haemus). Forman parte del borde suroeste de Mare Serenitatis.",
+        curiosity: "Se extienden por 560 km. Algunos picos alcanzan 2.4 km de altura. Galileo los observó en 1609."
+      },
+      "Vallis Alpes": { 
+        lat: 48.5, lon: 3.2, zoom: 11, type: "valley",
+        info: "Valle de los Alpes. Un espectacular valle de 166 km que corta a través de los Montes Alpes.",
+        curiosity: "Tiene 10 km de ancho y 3 km de profundidad. Contiene una rima sinuosa en su piso, visible solo con telescopios grandes."
+      },
+      "Vallis Schröteri": { 
+        lat: 26.2, lon: -50.8, zoom: 11, type: "valley",
+        info: "Nombrado por Johann Schröter, astrónomo alemán. Es el canal sinuoso más grande y prominente de la Luna.",
+        curiosity: "Tiene 168 km de largo, comenzando en un cráter llamado 'Cobra's Head'. Alcanza 10 km de ancho y 1 km de profundidad."
+      },
+      "Rima Ariadaeus": { 
+        lat: 6.4, lon: 14.0, zoom: 12, type: "rille",
+        info: "Nombrada por el cráter cercano Ariadaeus. Una de las rimas lineales más rectas y prominentes de la Luna.",
+        curiosity: "Se extiende por 300 km con solo ligeras curvas. Es en realidad una fosa tectónica (graben) formada por hundimiento de la corteza."
+      },
+      "Rima Hadley": { 
+        lat: 25.0, lon: 3.0, zoom: 13, type: "rille",
+        info: "Nombrada por John Hadley, inventor del sextante. Sitio de exploración de Apollo 15 (1971).",
+        curiosity: "David Scott y James Irwin exploraron esta rima con el primer rover lunar. Tiene 135 km de largo y hasta 1.5 km de ancho."
+      },
+      "Sinus Iridum": { 
+        lat: 44.1, lon: -31.5, zoom: 10, type: "bay",
+        info: "Bahía del Arcoíris. Una de las formaciones lunares más hermosas, especialmente bajo luz rasante.",
+        curiosity: "El borde sur fue destruido por lava del Mare Imbrium. Al amanecer lunar, sus montañas crean el 'Joyero de Joyas de la Luna'."
+      },
+      "Reiner Gamma": { 
+        lat: 7.5, lon: -58.9, zoom: 12, type: "swirl",
+        info: "Remolino lunar más brillante y misterioso. Nombrado por el astrónomo Vincenzo Reiner.",
+        curiosity: "No es un cráter sino una marca de albedo brillante. Asociado con anomalías magnéticas locales. Su origen aún se debate."
+      },
+      "Mons Piton": { 
+        lat: 40.6, lon: -0.9, zoom: 12, type: "peak",
+        info: "Nombrado por Pico Piton en Tenerife. Montaña aislada en Mare Imbrium.",
+        curiosity: "Se eleva 2.3 km sobre el mare. Es un remanente del anillo de la cuenca Imbrium que sobrevivió a los flujos de lava."
+      },
+      "Mons Pico": { 
+        lat: 45.7, lon: -8.9, zoom: 12, type: "peak",
+        info: "Nombrado por Pico de Teide en Tenerife. Montaña prominente en Mare Imbrium.",
+        curiosity: "Se eleva 2.4 km sobre el mare circundante. Proyecta una sombra dramática al amanecer y atardecer lunares."
+      }
+    };
+
+    const lunarFeatures = {};
+    for (const [name, data] of Object.entries(lunarFeaturesData)) {
+      const coords = convertCoords(data.lat, data.lon);
+      lunarFeatures[name] = {
+        x: coords.x,
+        y: coords.y,
+        zoom: data.zoom,
+        type: data.type,
+        lat: data.lat,
+        lon: data.lon,
+        info: data.info,
+        curiosity: data.curiosity
+      };
+    }
+
+    function showDetailPanel(name) {
+      const feature = lunarFeatures[name];
+      const panel = document.getElementById('detailPanel');
+      
+      document.getElementById('featureName').textContent = name;
+      
+      const latDir = feature.lat >= 0 ? 'N' : 'S';
+      const lonDir = feature.lon >= 0 ? 'E' : 'O';
+      document.getElementById('featureCoords').textContent = 
+        `${Math.abs(feature.lat).toFixed(2)}°${latDir}, ${Math.abs(feature.lon).toFixed(2)}°${lonDir}`;
+      
+      const typeNames = {
+        'mare': 'Mar',
+        'crater': 'Cráter',
+        'landing': 'Sitio de Alunizaje',
+        'mountain': 'Montañas',
+        'valley': 'Valle',
+        'rille': 'Rima',
+        'bay': 'Bahía',
+        'swirl': 'Remolino',
+        'peak': 'Pico'
+      };
+      document.getElementById('featureType').textContent = typeNames[feature.type] || feature.type;
+      
+      document.getElementById('featureInfo').textContent = feature.info || 'No hay información disponible.';
+      document.getElementById('featureCuriosity').textContent = feature.curiosity || 'No hay datos curiosos disponibles.';
+      
+      panel.classList.add('visible');
+    }
+
+    function closeDetailPanel() {
+      document.getElementById('detailPanel').classList.remove('visible');
+    }
+
+    function searchFeature() {
+      const query = document.getElementById("searchInput").value.toLowerCase().trim();
+      const resultsDiv = document.getElementById("results");
+      const countBadge = document.getElementById("countBadge");
+      resultsDiv.innerHTML = "";
+
+      let features = Object.keys(lunarFeatures);
+      
+      if (query) {
+        features = features.filter(f => f.toLowerCase().includes(query));
+      }
+
+      countBadge.textContent = `${features.length} característica${features.length !== 1 ? 's' : ''}`;
+
+      if (features.length > 0) {
+        features.sort().forEach(name => {
+          const feature = lunarFeatures[name];
+          const div = document.createElement("div");
+          div.className = "result-item";
+          
+          const nameSpan = document.createElement("span");
+          nameSpan.textContent = name;
+          
+          const typeSpan = document.createElement("span");
+          typeSpan.className = "result-type";
+          typeSpan.textContent = feature.type;
+          
+          div.appendChild(nameSpan);
+          div.appendChild(typeSpan);
+          
+          div.onclick = () => {
+            viewer.viewport.panTo(new OpenSeadragon.Point(feature.x, feature.y), true);
+            viewer.viewport.zoomTo(feature.zoom, null, true);
+            showDetailPanel(name);
+          };
+          resultsDiv.appendChild(div);
+        });
+      } else {
+        resultsDiv.innerHTML = "<p style='color: #ff6b6b; text-align: center; padding: 20px;'>No se encontraron resultados</p>";
+      }
+    }
+
+    window.addEventListener('load', () => {
+      setTimeout(searchFeature, 500);
+    });
+
+    document.getElementById("searchInput").addEventListener('input', searchFeature);
+
+    document.getElementById("searchInput").addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') searchFeature();
+    });
+
+    document.getElementById("zoom-in").onclick = () => {
+      viewer.viewport.zoomBy(1.4);
+      viewer.viewport.applyConstraints();
+    };
+
+    document.getElementById("zoom-out").onclick = () => {
+      viewer.viewport.zoomBy(0.7);
+      viewer.viewport.applyConstraints();
+    };
+
+    document.getElementById("home").onclick = () => {
+      viewer.viewport.goHome();
+    };
+
+    document.getElementById("fullscreen").onclick = () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    };
+
+    document.addEventListener('keydown', function(e) {
+      switch(e.key) {
+        case '+':
+        case '=':
+          viewer.viewport.zoomBy(1.3);
+          break;
+        case '-':
+          viewer.viewport.zoomBy(0.7);
+          break;
+        case 'Home':
+          viewer.viewport.goHome();
+          break;
+        case 'f':
+        case 'F':
+          document.getElementById("fullscreen").click();
+          break;
+      }
+    });
+
+    let gridVisible = false;
+    const gridOverlay = document.getElementById('grid-overlay');
+
+    function createGrid() {
+      gridOverlay.innerHTML = '';
+      
+      Object.entries(lunarFeatures).forEach(([name, data]) => {
+        const label = document.createElement('div');
+        label.className = 'grid-label';
+        label.style.left = `${data.x * 100}%`;
+        label.style.top = `${data.y * 100}%`;
+        label.style.transform = 'translate(-50%, -50%)';
+        
+        label.textContent = name;
+        
+        label.onclick = (e) => {
+          e.stopPropagation();
+          viewer.viewport.panTo(new OpenSeadragon.Point(data.x, data.y), true);
+          viewer.viewport.zoomTo(data.zoom, null, true);
+          showDetailPanel(name);
+        };
+        
+        gridOverlay.appendChild(label);
+      });
+    }
+
+    function toggleGrid() {
+      gridVisible = !gridVisible;
+      
+      if (gridVisible) {
+        createGrid();
+        gridOverlay.style.display = 'block';
+        document.querySelector('.toggle-grid').innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+          </svg>
+          <span>Ocultar Nomenclatura</span>
+        `;
+      } else {
+        gridOverlay.style.display = 'none';
+        document.querySelector('.toggle-grid').innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm8 0A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3z"/>
+          </svg>
+          <span>Mostrar Nomenclatura</span>
+        `;
+      }
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      const toggleIcon = document.getElementById('sidebarToggleIcon');
+      sidebar.classList.toggle('hidden');
+      
+      if (sidebar.classList.contains('hidden')) {
+        toggleIcon.innerHTML = '<path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>';
+      } else {
+        toggleIcon.innerHTML = '<path d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>';
+      }
+    }
+
+    function minimizeSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      const minimizeText = document.getElementById('minimizeText');
+      const minimizeIcon = document.getElementById('minimizeIcon');
+      
+      sidebar.classList.toggle('minimized');
+      
+      if (sidebar.classList.contains('minimized')) {
+        minimizeText.textContent = 'Mostrar más';
+        minimizeIcon.innerHTML = '<path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>';
+      } else {
+        minimizeText.textContent = 'Mostrar menos';
+        minimizeIcon.innerHTML = '<path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 4.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V14.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3z"/>';
+      }
+    }
+
+    function toggleInfo() {
+      const infoBox = document.getElementById('infoBox');
+      infoBox.classList.toggle('hidden');
+    }
+
+    console.log('ORIONIX Luna Explorer iniciado');
+    console.log('Características disponibles:', Object.keys(lunarFeatures).length);
+  </script>
+</body>
+</html>
